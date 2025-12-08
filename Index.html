@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Pi Forge: Status Console</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* --- Cyber-Occult Theming --- */
+        :root {
+            --dark-bg: #0d0c1d;
+            --cyan-neon: #00ffff;
+            --green-neon: #00ffaa;
+            --purple-neon: #ff00ff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: #ccc;
+        }
+
+        .text-cyan-neon { color: var(--cyan-neon); }
+        .text-green-neon { color: var(--green-neon); }
+        .text-purple-neon { color: var(--purple-neon); }
+        .border-cyan-neon { border-color: var(--cyan-neon); }
+        .border-green-neon { border-color: var(--green-neon); }
+
+        /* Polish 2: Stronger glow for active elements */
+        .neon-glow {
+            box-shadow: 0 0 10px var(--cyan-neon), inset 0 0 5px var(--cyan-neon);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .neon-border {
+            border: 2px solid var(--cyan-neon) !important;
+        }
+
+        /* Hover effect for interactive elements */
+        .interactive-neon:hover {
+            color: var(--green-neon);
+            cursor: pointer;
+            text-shadow: 0 0 5px var(--green-neon);
+            transform: scale(1.02);
+        }
+        
+        /* Custom scrollbar for timeline */
+        .scroll-neon::-webkit-scrollbar { width: 4px; }
+        .scroll-neon::-webkit-scrollbar-track { background: var(--dark-bg); }
+        .scroll-neon::-webkit-scrollbar-thumb { background: var(--purple-neon); border-radius: 2px; }
+        .scroll-neon::-webkit-scrollbar-thumb:hover { background: var(--cyan-neon); }
+
+        /* Blinking Cursor Animation for Polish 1 (if needed, but using animate-pulse is cleaner) */
+        .animate-pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header: Status Console Title, Protocol, and Live Clock -->
+    <header class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-gray-900/50 rounded-lg border-2 border-purple-neon/50">
+        <!-- Polish 1: Blinking Cursor -->
+        <h1 class="text-3xl font-extrabold text-cyan-neon tracking-wider inline-block">
+            QUANTUM PI FORGE: STATUS CONSOLE<span class="animate-pulse">|</span>
+        </h1>
+        <div class="text-right mt-2 sm:mt-0">
+            <p class="text-sm font-mono text-purple-neon">Covenant Protocol v1.0 — ONLINE</p>
+            <!-- Polish 4: Live Clock -->
+            <p class="text-xs font-mono text-green-neon">
+                Local Resonance Time: <span id="live-clock" class="ml-1">00:00:00</span>
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Grid Layout (4 Columns on Desktop, collapsing to 1 on Mobile) -->
+    <main class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+
+        <!-- Column 1: Core Telemetry (Charts) -->
+        <section class="lg:col-span-2 space-y-6">
+            <!-- Telemetry Block 1: Resonance Data -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70 neon-glow">
+                <h2 class="text-xl font-bold text-green-neon mb-4 border-b border-green-neon/50 pb-2">I. Protocol Integrity (Resonance)</h2>
+                <div class="h-64">
+                    <canvas id="resonanceChart"></canvas>
+                </div>
+                <p class="text-center text-sm mt-4 font-mono">Current Amplitude: 99.7% | Block Lag: 0.04ms</p>
+            </div>
+
+            <!-- Telemetry Block 2: Latency & Error Rate -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70">
+                <h2 class="text-xl font-bold text-purple-neon mb-4 border-b border-purple-neon/50 pb-2">II. Dataflow Flux (Latency)</h2>
+                <div class="h-64">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+                <p class="text-center text-sm mt-4 font-mono">Error Manifestation Rate: 0.0001% (Nominal)</p>
+            </div>
+        </section>
+
+        <!-- Column 2: Ritual Timeline (List) and Guardian Roles (List) -->
+        <section class="lg:col-span-1 space-y-6">
+            <!-- Ritual Timeline -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70 h-[400px] flex flex-col">
+                <h2 class="text-xl font-bold text-cyan-neon mb-4 border-b border-cyan-neon/50 pb-2">III. Ritual Chronology</h2>
+                <div id="ritual-timeline" class="space-y-3 overflow-y-auto scroll-neon flex-grow">
+                    <!-- Rituals will be populated here by JS -->
+                </div>
+            </div>
+
+            <!-- Guardian Roles -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70 h-[332px] flex flex-col">
+                <h2 class="text-xl font-bold text-green-neon mb-4 border-b border-green-neon/50 pb-2">IV. The Guardians' Vow</h2>
+                <div id="guardian-list" class="space-y-2 overflow-y-auto scroll-neon flex-grow">
+                    <!-- Guardians will be populated here by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Column 3: Main Readout and Details -->
+        <section class="lg:col-span-1 space-y-6">
+            <!-- Main Readout & Navigation -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70">
+                <h2 class="text-xl font-bold text-purple-neon mb-4 border-b border-purple-neon/50 pb-2">V. Artifact Index</h2>
+                <nav id="nav-links" class="space-y-2 text-sm">
+                    <a href="#" class="block interactive-neon hover:text-cyan-neon" data-content="main-status">🞈 Main Status Core</a>
+                    <a href="#" class="block interactive-neon" data-content="ledger-review">🞈 Distributed Ledger Review</a>
+                    <a href="#" class="block interactive-neon" data-content="manifest-log">🞈 Telemetry Manifest Log</a>
+                    <a href="#" class="block interactive-neon" data-content="access-keys">🞈 Guardian Access Keys</a>
+                </nav>
+            </div>
+
+            <!-- Dynamic Details Panel -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70 h-[500px] flex flex-col">
+                <h2 id="details-header" class="text-xl font-bold text-cyan-neon mb-4 border-b border-cyan-neon/50 pb-2">VI. Ritual / Role Focus</h2>
+                <div id="details-content" class="text-sm font-mono overflow-y-auto scroll-neon flex-grow">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Glyph Legend -->
+            <div class="p-4 rounded-xl border border-gray-700 bg-gray-900/70">
+                <h2 class="text-xl font-bold text-green-neon mb-4 border-b border-green-neon/50 pb-2">VII. Glyph Legend</h2>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <p class="hover-vow" data-vow="Initiation & Architecture">✦ Architect</p>
+                    <p class="hover-vow" data-vow="Dataflow & Maintenance">⭓ Operator</p>
+                    <p class="hover-vow" data-vow="Security & Audit">⧈ Gatekeeper</p>
+                    <p class="hover-vow" data-vow="Community & Outreach">⭗ Emissary</p>
+                </div>
+                <p id="vow-readout" class="mt-4 text-center text-cyan-neon font-mono h-4 text-sm"></p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Global Data Structures
+        const APP_STATE = {
+            activeGuardian: null,
+            activeRitual: 3, // Polish 3: Will be set dynamically by getCurrentRitualIndex
+            guardians: [
+                { id: 'elysium', name: 'Elysium', role: '✦ Architect', responsibilities: ['Core Architecture Design', 'Protocol Manifest Approval', 'Cross-Chain Nexus Oversight'] },
+                { id: 'zenith', name: 'Zenith', role: '⭓ Operator', responsibilities: ['Real-time Telemetry Management', 'Dataflow Integrity Checks', 'Forge Maintenance Cycles'] },
+                { id: 'kairo', name: 'Kairo', role: '⧈ Gatekeeper', responsibilities: ['Smart Contract Audit & Sealing', 'Security Layer Implementation', 'Intrusion Detection Rituals'] },
+                { id: 'selene', name: 'Selene', role: '⭗ Emissary', responsibilities: ['Community Engagement & Outreach', 'Artifact Transparency Reporting', 'Feedback Resonance Collection'] }
+            ],
+            rituals: [
+                { id: 0, date: 'Nov 1 - 7', title: 'Smart Contract V1 Sealing', status: 'Completed' },
+                { id: 1, date: 'Nov 8 - 14', title: 'Initial Telemetry Setup', status: 'Completed' },
+                { id: 2, date: 'Dec 1 - 6', title: 'Guardian Key Distribution', status: 'Completed' },
+                { id: 3, date: 'Dec 7 - 13', title: 'Mobile App Beta Launch', status: 'Active' },
+                { id: 4, date: 'Dec 14 - 20', title: 'Transparency Dashboard v2', status: 'Pending' },
+                { id: 5, date: 'Dec 21 - 27', title: 'Layer 2 Integration Study', status: 'Pending' },
+            ]
+        };
+
+        // --- Utility Functions ---
+
+        /**
+         * Polish 4: Starts the live clock in the header.
+         */
+        function startLiveClock() {
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) {
+                // Initial update
+                const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
+                clockEl.textContent = now;
+                
+                // Interval update
+                setInterval(() => {
+                    const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
+                    clockEl.textContent = now;
+                }, 1000);
+            }
+        }
+
+        /**
+         * Polish 3: Dynamically determines the current ritual based on the system date.
+         * Note: Uses mock data structure (Dec 2025).
+         * @returns {number} Index of the active ritual, or -1 if none is active.
+         */
+        function getCurrentRitualIndex() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth(); // 0-11
+            const day = today.getDate();
+
+            // Set a target year for the demo data (e.g., 2025)
+            const targetYear = 2025;
+            
+            // Only proceed if the current year matches the mock data year (for stable demo behavior)
+            if (year !== targetYear) {
+                // If the year doesn't match, default to index 3 (Dec 7-13) for a consistent demo state.
+                return 3;
+            }
+
+            // Hard-coded checks for December (month 11) 2025
+            if (month === 11) {
+                if (day >= 7 && day <= 13) return 3;  // Dec 7–13 → Mobile App Beta
+                if (day >= 14 && day <= 20) return 4; // Dec 14–20 → Transparency Dashboard v2
+            }
+            // For a production app, this would use a proper date range comparison
+            return -1; 
+        }
+
+        // --- Rendering Functions ---
+
+        /**
+         * Renders the list of Guardians and sets up click handlers.
+         */
+        function renderGuardians() {
+            const container = document.getElementById('guardian-list');
+            container.innerHTML = '';
+            APP_STATE.guardians.forEach(g => {
+                const el = document.createElement('div');
+                el.id = `guardian-${g.id}`;
+                el.className = `p-2 rounded-lg bg-gray-800/70 hover:bg-gray-700/80 interactive-neon flex justify-between items-center transition-all duration-150`;
+                el.innerHTML = `
+                    <span class="text-sm font-semibold text-cyan-neon">${g.name}</span>
+                    <span class="text-xs font-mono text-purple-neon">${g.role}</span>
+                `;
+                el.onclick = () => selectGuardian(g.id);
+                container.appendChild(el);
+            });
+        }
+
+        /**
+         * Renders the Ritual Timeline and sets up click handlers.
+         */
+        function renderRituals() {
+            const container = document.getElementById('ritual-timeline');
+            container.innerHTML = '';
+            APP_STATE.rituals.forEach(r => {
+                const statusClass = r.status === 'Completed' ? 'text-green-neon' : 
+                                   r.status === 'Active' ? 'text-cyan-neon neon-glow neon-border' : 
+                                   'text-gray-500 border-gray-700';
+                
+                const el = document.createElement('div');
+                el.id = `ritual-${r.id}`;
+                el.className = `p-2 rounded-lg border-2 interactive-neon transition-all duration-300 ${statusClass}`;
+                el.innerHTML = `
+                    <p class="text-xs font-mono">${r.date}</p>
+                    <p class="text-sm font-semibold">${r.title}</p>
+                `;
+                el.onclick = () => selectRitual(r.id);
+                container.appendChild(el);
+            });
+        }
+        
+        // --- Interaction Handlers ---
+
+        /**
+         * Handles the selection of a Guardian, updating the UI.
+         * @param {string} id - The ID of the selected guardian.
+         */
+        function selectGuardian(id) {
+            APP_STATE.activeGuardian = id;
+            APP_STATE.activeRitual = null; // Deselect ritual
+            
+            const guardian = APP_STATE.guardians.find(g => g.id === id);
+            
+            // 1. Update Guardian List Highlights
+            document.querySelectorAll('#guardian-list > div').forEach(el => {
+                el.classList.remove('neon-glow', 'neon-border');
+            });
+            document.getElementById(`guardian-${id}`).classList.add('neon-glow', 'neon-border');
+
+            // 2. Update Ritual List Highlights (remove active styles)
+            document.querySelectorAll('#ritual-timeline > div').forEach(el => {
+                el.classList.remove('neon-glow', 'neon-border');
+            });
+            
+            // 3. Update Details Panel
+            document.getElementById('details-header').textContent = `VI. Guardian Focus: ${guardian.name}`;
+            document.getElementById('details-header').classList.remove('text-cyan-neon');
+            document.getElementById('details-header').classList.add('text-green-neon');
+
+            const contentEl = document.getElementById('details-content');
+            contentEl.innerHTML = `
+                <p class="text-purple-neon mb-2">:: Primary Role: ${guardian.role}</p>
+                <p class="text-cyan-neon mb-4">:: Allocated Responsibilities:</p>
+                <ul class="list-disc list-inside space-y-2">
+                    ${guardian.responsibilities.map(r => `<li class="font-mono text-white/90">${r}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        /**
+         * Handles the selection of a Ritual, updating the UI.
+         * @param {number} id - The ID of the selected ritual.
+         */
+        function selectRitual(id) {
+            APP_STATE.activeRitual = id;
+            APP_STATE.activeGuardian = null; // Deselect guardian
+
+            const ritual = APP_STATE.rituals.find(r => r.id === id);
+
+            // 1. Update Ritual List Highlights
+            document.querySelectorAll('#ritual-timeline > div').forEach(el => {
+                el.classList.remove('neon-glow', 'neon-border');
+                // Re-apply base status class if needed
+                const status = APP_STATE.rituals.find(r => r.id === parseInt(el.id.split('-')[1])).status;
+                if (status === 'Active') {
+                    // Ensures the current day's ritual always has a base highlight
+                    el.classList.add('text-cyan-neon');
+                }
+            });
+            document.getElementById(`ritual-${id}`).classList.add('neon-glow', 'neon-border');
+            
+            // 2. Update Guardian List Highlights (remove active styles)
+            document.querySelectorAll('#guardian-list > div').forEach(el => {
+                el.classList.remove('neon-glow', 'neon-border');
+            });
+
+            // 3. Update Details Panel
+            document.getElementById('details-header').textContent = `VI. Ritual Focus: ${ritual.title}`;
+            document.getElementById('details-header').classList.remove('text-green-neon');
+            document.getElementById('details-header').classList.add('text-cyan-neon');
+
+            const contentEl = document.getElementById('details-content');
+            contentEl.innerHTML = `
+                <p class="text-purple-neon mb-2">:: Schedule: ${ritual.date}</p>
+                <p class="text-cyan-neon mb-4">:: Status: ${ritual.status}</p>
+                <p class="font-mono text-white/90">
+                    <strong class="text-green-neon">Manifest Log:</strong> The Forge is dedicating maximum resource allocation to complete this key component. The focus is on security review and performance tuning before final seal. Estimated resource commitment: 80%.
+                </p>
+                <p class="font-mono text-white/90 mt-4">
+                    <strong class="text-green-neon">Key Deliverables:</strong> Core functionality (99% complete), Interface (100% complete), Unit tests (90% complete). Awaiting final security audit by Gatekeeper Kairo.
+                </p>
+            `;
+        }
+
+        /**
+         * Handles the main navigation links, updating the details panel with general content.
+         */
+        function handleNavigation() {
+            document.querySelectorAll('#nav-links a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Reset highlights
+                    document.querySelectorAll('#nav-links a').forEach(l => l.classList.remove('hover:text-cyan-neon'));
+                    e.target.classList.add('hover:text-cyan-neon');
+
+                    // Deselect Guardian/Ritual
+                    APP_STATE.activeGuardian = null;
+                    APP_STATE.activeRitual = null;
+
+                    document.querySelectorAll('#guardian-list > div').forEach(el => el.classList.remove('neon-glow', 'neon-border'));
+                    document.querySelectorAll('#ritual-timeline > div').forEach(el => el.classList.remove('neon-glow', 'neon-border'));
+
+                    // Update Details Panel for navigation content
+                    const contentKey = e.target.getAttribute('data-content');
+                    document.getElementById('details-header').textContent = `VI. System Readout: ${e.target.textContent.substring(2)}`;
+                    document.getElementById('details-header').classList.remove('text-green-neon', 'text-cyan-neon');
+                    document.getElementById('details-header').classList.add('text-purple-neon');
+
+                    const contentEl = document.getElementById('details-content');
+                    
+                    let content = '';
+                    if (contentKey === 'main-status') {
+                        content = `<p class="font-mono text-green-neon">All core modules online and operating at optimal capacity. Resonance field stable. Awaiting next command directive from Overseer. Cycle integrity: ${new Date().toISOString()}.</p>`;
+                    } else if (contentKey === 'ledger-review') {
+                        content = `<p class="font-mono text-purple-neon">Reviewing historical commitment records. Latest transaction hash: 0x8a92b...c3f. Block height: 4,001,872. Next block expected: T-00:03:15. All transactions are immutable.</p>`;
+                    } else if (contentKey === 'manifest-log') {
+                        content = `<p class="font-mono text-cyan-neon">Telemetry Stream Log (Last 10 entries): [WARN] Flux spike detected (0.01s). [INFO] Guardian Zenith check-in. [CRIT] Network fragmentation threat averted by Kairo. [INFO] Protocol V1.0 check.</p>`;
+                    } else if (contentKey === 'access-keys') {
+                        content = `<p class="font-mono text-red-500">Access Key display restricted due to security protocol 7-Delta. Authenticate with Biometric-Rune-Sequence for temporary visibility. Unauthorized access attempts will trigger Gatekeeper alert.</p>`;
+                    }
+                    contentEl.innerHTML = content;
+                });
+            });
+        }
+
+        /**
+         * Sets up the Glyph Legend hover interaction.
+         */
+        function setupGlyphLegend() {
+            const readout = document.getElementById('vow-readout');
+            document.querySelectorAll('.hover-vow').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    readout.textContent = `:: Vow: ${el.getAttribute('data-vow')}`;
+                });
+                el.addEventListener('mouseleave', () => {
+                    readout.textContent = '';
+                });
+            });
+        }
+
+        // --- Chart Rendering ---
+
+        /**
+         * Renders the Resonance Data Line Chart.
+         */
+        function renderResonanceChart() {
+            const ctx = document.getElementById('resonanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00'],
+                    datasets: [{
+                        label: 'Resonance (%)',
+                        data: [99.5, 99.7, 99.8, 99.6, 99.9, 99.7, 99.7],
+                        borderColor: 'var(--cyan-neon)',
+                        backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                        pointBackgroundColor: 'var(--cyan-neon)',
+                        tension: 0.3,
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            min: 99, max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#ccc' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#ccc' }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Renders the Latency & Error Rate Bar Chart.
+         */
+        function renderLatencyChart() {
+            const ctx = document.getElementById('latencyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Node A', 'Node B', 'Node C', 'Node D'],
+                    datasets: [{
+                        label: 'Avg Latency (ms)',
+                        data: [15, 22, 18, 12],
+                        backgroundColor: 'var(--purple-neon)',
+                        borderWidth: 0,
+                    },
+                    {
+                        label: 'Error Rate (x10^-4)',
+                        data: [1, 0.5, 1.2, 0.7],
+                        backgroundColor: 'var(--green-neon)',
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#ccc' } } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#ccc' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#ccc' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- Initialization ---
+
+        function init() {
+            // Render static elements
+            renderGuardians();
+            renderRituals();
+            
+            // Set up interactions
+            handleNavigation();
+            setupGlyphLegend();
+
+            // Render charts
+            renderResonanceChart();
+            renderLatencyChart();
+
+            // Polish 4: Start the clock
+            startLiveClock();
+
+            // Polish 3: Auto-select the current ritual based on system time
+            const autoRitualIndex = getCurrentRitualIndex();
+            if (autoRitualIndex !== -1) {
+                selectRitual(autoRitualIndex);
+                // Auto-scroll the timeline to the active ritual
+                const activeEl = document.getElementById(`ritual-${autoRitualIndex}`);
+                if (activeEl) {
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                // If no ritual is active, default to the main status readout
+                document.querySelector('[data-content="main-status"]').click();
+            }
+        }
+
+        // Initialize the console when the document is fully loaded
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
+
